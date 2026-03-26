@@ -7,27 +7,32 @@ Filters out YouTube Shorts by checking the /shorts/ URL.
 import os
 import requests
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from dotenv import load_dotenv
 
 # Load your secret API key from the .env file
 load_dotenv()
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
-# ========================================
-# YOUR FAVORITE CHANNELS GO HERE
-# Use the @ handle from the channel's YouTube page (most reliable)
-# Example: youtube.com/@MrBeast → use "@MrBeast"
-# ========================================
-CHANNELS = [
-    "@LatentSpacePod",
-    "@ycombinator",
-    "@a16z",
-    "@RedpointAI",
-    "@EveryInc",
-    "@DataDrivenNYC",
-    "@NoPriorsPodcast",
-    "@DwarkeshPatel",
-]
+
+def load_channels(filepath="channels.txt"):
+    """
+    Read channel handles from channels.txt.
+    Lines starting with # are comments and will be ignored.
+    """
+    channels = []
+    try:
+        with open(filepath, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    channels.append(line)
+    except FileNotFoundError:
+        print(f"⚠ {filepath} not found, using empty channel list")
+    return channels
+
+
+CHANNELS = load_channels()
 
 
 def get_channel_info(youtube, channel_handle):
@@ -88,7 +93,24 @@ def get_latest_video(youtube, uploads_playlist_id, channel_name):
         playlistId=uploads_playlist_id,
         maxResults=15
     )
-    response = request.execute()
+    try:
+        response = request.execute()
+    except HttpError as e:
+        if e.resp.status == 404:
+            # Some channels migrated from UU→UULF prefix; try the alternative
+            alt_playlist_id = "UULF" + uploads_playlist_id[2:]
+            try:
+                request = youtube.playlistItems().list(
+                    part="snippet",
+                    playlistId=alt_playlist_id,
+                    maxResults=15
+                )
+                response = request.execute()
+            except HttpError:
+                print(f"  ✗ Playlist not found for {channel_name}, skipping")
+                return None
+        else:
+            raise
 
     for item in response.get("items", []):
         video_id = item["snippet"]["resourceId"]["videoId"]

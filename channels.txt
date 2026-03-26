@@ -1,0 +1,22 @@
+# Edit channels with YouTube channel handles
+# 更新时间：2026-03-26
+# 筛选依据：AI产品思考 + 应用落地 + 工业/能源AI方向
+# 使用场景：碎片消费 / 持续跟踪 / 提案调研
+
+# ── AI 产品设计思考（一手信息）──
+@anthropic
+@nopriorsai
+
+# ── 每日信息流（碎片时间）──
+@theaidailybrief
+
+# ── 深度长内容（睡前/周末）──
+@lexfridman
+@AndrejKarpathy
+
+# ── 工程落地 & 实战场景 ──
+@aiengineerworldsfair
+
+# ── 投资人视角看AI趋势（提案背景调研）──
+@a16z
+@sequoiacapital
